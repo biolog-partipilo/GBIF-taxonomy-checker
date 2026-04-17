@@ -1,4 +1,4 @@
-# spider-taxonomy-checker
+# GBIF-taxonomy-checker
 Python script to validate and update taxonomic names using GBIF, writing results directly into an Excel file
 
 ## Features
@@ -56,4 +56,4 @@ The script updates the excel file directly:
 
 
 ## Citation
-If you use this tool in research, please consider citing or acknowledging the repository.
+If you use this tool, please consider citing or acknowledging the repository.
