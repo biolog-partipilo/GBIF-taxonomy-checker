@@ -1,0 +1,126 @@
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.pagesizes import A5
+from reportlab.lib.styles import getSampleStyleSheet
+
+from openpyxl import load_workbook
+
+FILE_PATH = r"D:your_path\filename.xlsx"
+#choose output file_name
+OUTPUT_PDF = input("Enter output PDF name (without .pdf): ").strip() or "output"
+OUTPUT_PDF += ".pdf"
+
+#excel formatting 
+
+def split_taxon(full_name):
+    """
+    Split taxon name into:
+    - species name
+    - author
+
+    Handles:
+    - normal binomial
+    - subspecies (subsp., ssp., var.)
+    """
+
+    if not full_name:
+        return "", ""
+
+    parts = full_name.split()
+
+    # detect subspecies / variety
+    if len(parts) >= 4 and parts[2] in ["subsp.", "ssp.", "var."]:
+        species_name = " ".join(parts[:4])
+        author = " ".join(parts[4:])
+    else:
+        species_name = " ".join(parts[:2])
+        author = " ".join(parts[2:])
+
+    return species_name, author
+
+def main():
+    wb = load_workbook(FILE_PATH)
+    ws = wb.active
+
+    print("🔧 Starting formatting process")
+
+    for row in range(3, ws.max_row + 1):
+        full_name = ws[f"J{row}"].value
+
+        if not full_name:
+            continue
+
+        species, author = split_taxon(full_name)
+
+        ws[f"J{row}"] = species
+        ws[f"K{row}"] = author
+
+        print(f"{row}: {species} | {author}")
+
+    wb.save(FILE_PATH)
+
+    print("✅ Formatting completed!")
+
+
+if __name__ == "__main__":
+    main()
+
+def generate_pdf():
+    wb = load_workbook(FILE_PATH)
+    ws = wb.active
+
+#page layout
+    doc = SimpleDocTemplate(
+    OUTPUT_PDF,
+    pagesize=A5,
+    leftMargin=30,
+    rightMargin=30,
+    topMargin=30,
+    bottomMargin=25
+)
+    styles = getSampleStyleSheet()
+
+    #  font size
+    style = styles["Normal"]
+    style.fontSize = 10
+    style.leading = 12
+
+    content = []
+
+    for row in range(3, ws.max_row + 1):
+        status = ws[f"I{row}"].value
+        old_name = ws[f"D{row}"].value
+        new_name = ws[f"J{row}"].value
+        pages = ws[f"F{row}"].value
+
+        if not new_name:
+            continue
+
+        # build line
+        
+        max_len = 60  #target lenght
+        
+        if status == "syn" and old_name:
+            base = f"{new_name} ({old_name})"
+        else:
+            base = f"{new_name}"
+
+        pages_str = str(pages) if pages else ""
+
+        dots = "." * max(3, max_len - len(base))
+
+        line = f"{base} {dots} {pages_str}"
+        
+        if status == "syn" and old_name:
+            text = f"<i>{new_name}</i> ({old_name})    {pages}"
+        else:
+            text = f"<i>{new_name}</i>    {pages}"
+
+        content.append(Paragraph(f"<i>{line}</i>", style))
+        content.append(Spacer(1, 4))
+
+    doc.build(content)
+
+    print("✅ PDF created!")
+
+if __name__ == "__main__":
+    generate_pdf()
