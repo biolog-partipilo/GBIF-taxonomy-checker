@@ -48,11 +48,14 @@ Output <br>
 The script updates the excel file directly:
   - Overwrites existing values
   - Saves progress every 25 rows (customisable)
+  - separate species from author
+
   
 ## Limitations
   - Depends on GBIF backbone taxonomy
   - No caching implemented
   - Requires internet connection
+  - tailored on .xlsx files (not tested with other formats)
 
 
 ## Citation
