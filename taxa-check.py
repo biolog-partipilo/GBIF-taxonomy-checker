@@ -74,13 +74,14 @@ def check_species(name):
     except Exception as e:
         print(f"❌ Exception for {name}: {e}")
         return "error", "", ""
-
+        
 def main():
     wb = load_workbook(FILE_PATH)
     ws = wb.active
 
     total_rows = ws.max_row
-# show work in progress
+
+    # show work in progress
     with tqdm(
         total=total_rows - 2,
         desc="Processing",
@@ -106,10 +107,6 @@ def main():
             ws[f"J{row}"] = updated_name
             ws[f"K{row}"] = author
 
-            # Clean author (remove parentheses)
-            if ws[f"K{row}"].value:
-                ws[f"K{row}"].value = ws[f"K{row}"].value.split("(")[0].strip()
-
             # Save periodically
             if row % SAVE_EVERY == 0:
                 wb.save(FILE_PATH)
@@ -117,9 +114,36 @@ def main():
 
             time.sleep(0.05)
             pbar.update(1)
-# job end
+
     wb.save(FILE_PATH)
-    print("✅ completed!")
+    print("🔎 Taxonomic check completed!")
+
+    # EXCEL FORMATTING STEP
+
+    print("🧹 Formatting process")
+
+    for row in range(3, total_rows + 1):
+        full_name = ws[f"J{row}"].value
+
+        if not full_name:
+            continue
+
+        parts = full_name.split()
+
+        if len(parts) >= 4 and parts[2] in ["subsp.", "ssp.", "var."]:
+            species_name = " ".join(parts[:4])
+            author = " ".join(parts[4:])
+        else:
+            species_name = " ".join(parts[:2])
+            author = " ".join(parts[2:])
+
+        ws[f"J{row}"] = species_name
+        ws[f"K{row}"] = author
+
+    wb.save(FILE_PATH)
+
+    print("📄 Formatting completed!")
+    print("✅ All Done!")
 
 
 if __name__ == "__main__":
